@@ -43,7 +43,7 @@ AUTH_KEYS=`cat ${AUTH_KEYS_FILE}`
 
 # Collect info from user
 
-SYSTEM_ADMIN_EMAIL="teknisk@arachno.no"
+SYSTEM_ADMIN_EMAIL="thomas@bensmann.no"
 echo -n "System admin email (root) [$SYSTEM_ADMIN_EMAIL]: "
 read SYSTEM_ADMIN_EMAIL_INPUT
 if [ -n "$SYSTEM_ADMIN_EMAIL_INPUT" ]; then
@@ -71,14 +71,14 @@ if [ -n "$WP_LOCALE_INPUT" ]; then
         WP_LOCALE=$WP_LOCALE_INPUT
 fi
 
-WP_USER="leidar"
+WP_USER="bensmann"
 echo -n "WP admin username [$WP_USER]: "
 read WP_USER_INPUT
 if [ -n "$WP_USER_INPUT" ]; then
         WP_USER=$WP_USER_INPUT
 fi
 
-WP_USER_EMAIL="teknisk@leidar.no"
+WP_USER_EMAIL=$SYSTEM_ADMIN_EMAIL
 echo -n "WP admin e-mail address [$WP_USER_EMAIL]: "
 read WP_USER_EMAIL_INPUT
 if [ -n "$WP_USER_EMAIL_INPUT" ]; then
@@ -385,24 +385,27 @@ wp core install --url=${WP_URL} --title=${WP_SITENAME} --admin_user=${WP_USER} -
 wp option update blogdescription "${WP_SITEDESCRIPTION}"
 echo "y" | wp site empty
 wp plugin uninstall hello
-wp plugin install wp-db-driver --activate
 wp plugin install advanced-custom-fields --activate
 wp plugin install aryo-activity-log --activate
+wp plugin install bj-lazy-load --activate
+wp plugin install enforce-strong-password --activate
 wp plugin install ewww-image-optimizer --activate
 wp plugin install google-analytics-for-wordpress --activate
-wp plugin install ninja-forms --activate
-wp plugin install relevanssi --activate
-wp plugin install simple-page-ordering --activate
-wp plugin install tablepress --activate
-wp plugin install wordpress-seo --activate
-wp plugin install wp-crontrol --activate
-wp plugin install wp-cron-control --activate
-wp plugin install https://github.com/kasparsd/minit/archive/master.zip --activate
-wp plugin install https://github.com/bjornjohansen/minit-yui/archive/master.zip --activate
-wp plugin install enforce-strong-password --activate
 wp plugin install google-authenticator --activate
 wp plugin install google-authenticator-encourage-user-activation --activate
 wp plugin install google-authenticator-per-user-prompt --activate
+wp plugin install ninja-forms --activate
+wp plugin install relevanssi --activate
+wp plugin install regenerate-thumbnails --activate
+wp plugin install simple-page-ordering --activate
+wp plugin install tablepress --activate
+wp plugin install wordpress-seo --activate
+wp plugin install wp-cron-control --activate
+wp plugin install wp-crontrol --activate
+wp plugin install wp-db-driver --activate
+wp plugin install wp-pagenavi --activate
+wp plugin install https://github.com/kasparsd/minit/archive/master.zip --activate
+wp plugin install https://github.com/bjornjohansen/minit-yui/archive/master.zip --activate
 
 
 # Set up cron
@@ -438,4 +441,3 @@ ENDTIME=$(date +%s)
 echo "It took $(($ENDTIME - $STARTTIME)) seconds to install and setup everything. Happy WordPressing!"
 
 echo
-
