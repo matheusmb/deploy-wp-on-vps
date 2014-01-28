@@ -171,12 +171,6 @@ echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-selec
 echo "postfix postfix/mailname string `hostname -f`" | debconf-set-selections
 
 
-# MariaDB repo and pre-config
-apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db
-add-apt-repository 'http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/ubuntu'
-echo "mariadb-server-5.5 mysql-server/root_password password $DB_ROOT_PASS" | debconf-set-selections
-echo "mariadb-server-5.5 mysql-server/root_password_again password $DB_ROOT_PASS" | debconf-set-selections
-
 # PHP repo
 add-apt-repository -y ppa:ondrej/php5
 
@@ -192,8 +186,16 @@ add-apt-repository 'http://repo.varnish-cache.org/ubuntu/ varnish-3.0'
 
 # install everything
 apt-get -q update
-apt-get -qy install mariadb-server htop screen vim curl ntp fail2ban ufw nginx php5-cli php5-common php5-fpm php5-cgi php5-curl php5-gd php5-imagick php5-mcrypt php5-mysql libjpeg-progs optipng pngcrush gifsicle imagemagick zip unzip memcached php5-memcache varnish postfix git openjdk-6-jre
+
+echo mysql-server mysql-server/root_password select $DB_ROOT_PASS | debconf-set-selections
+echo mysql-server mysql-server/root_password_again select $DB_ROOT_PASS | debconf-set-selections
+apt-get -qy install mysql-server mysql-client htop screen vim curl ntp fail2ban ufw nginx php5-cli php5-common php5-fpm php5-cgi php5-curl php5-gd php5-imagick php5-mcrypt php5-mysql libjpeg-progs optipng pngcrush gifsicle imagemagick zip unzip memcached php5-memcache varnish postfix git openjdk-6-jre
+
+
 apt-get -qy dist-upgrade
+
+#add database and user
+mysql -u root -p"${DB_ROOT_PASS}" -e ";DROP DATABASE test;DROP USER ''@'localhost';CREATE DATABASE ${DB_NAME};GRANT ALL ON ${DB_NAME}.* TO ${DB_USER}@localhost IDENTIFIED BY '${DB_PASS}';GRANT ALL ON ${DB_NAME}.* TO ${DB_USER}@'%' IDENTIFIED BY '${DB_PASS}'" 
 
 
 # Setup firewall
@@ -226,19 +228,6 @@ Unattended-Upgrade::Remove-Unused-Dependencies \"false\";
 Unattended-Upgrade::Automatic-Reboot \"false\";
 " > /etc/apt/apt.conf.d/50unattended-upgrades
 
-# Secure MariaDB
-TEMP_MARIADB_CONFIG_FILE=".my.cnf.$$"
-touch $TEMP_MARIADB_CONFIG_FILE && chmod 0600 $TEMP_MARIADB_CONFIG_FILE
-echo "[mysql]
-user=root
-password=${DB_ROOT_PASS}" >> $TEMP_MARIADB_CONFIG_FILE
-
-mysql --defaults-file=$TEMP_MARIADB_CONFIG_FILE -e "DELETE FROM mysql.user WHERE User=''; DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1'); DROP DATABASE test; DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%'; FLUSH PRIVILEGES;"
-
-# MariaDB config
-mysql --defaults-file=$TEMP_MARIADB_CONFIG_FILE -e "CREATE DATABASE ${DB_NAME} collate ${DB_COLLATION}; GRANT ALL ON ${DB_NAME}.* TO ${DB_USER}@localhost IDENTIFIED BY '${DB_PASS}';"
-
-rm $TEMP_MARIADB_CONFIG_FILE
 
 # PHP config
 echo "post_max_size = 200M
